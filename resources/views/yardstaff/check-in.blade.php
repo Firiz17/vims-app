@@ -31,13 +31,25 @@
         <label>Arrival Date:</label><br>
         <input type="date" name="arrival_date" required><br><br>
 
-        <label>Park in Location:</label><br>
+        <label>Parking Location:</label><br>
         <select name="location_id" required>
-            <option value="">-- Select a Zone --</option>
+            <option value="" disabled selected>-- Select a Zone --</option>
             @foreach($locations as $location)
-                <option value="{{ $location->id }}">{{ $location->name }} (Capacity: {{ $location->total_capacity }})</option>
+                @php
+                    $spotsLeft = $location->allowed_capacity - $location->vehicles_count;
+                @endphp
+
+                <option value="{{ $location->id }}" {{ $spotsLeft <= 0 ? 'disabled' : '' }}>
+                    {{ $location->name }}
+                    @if($spotsLeft <= 0)
+                        (FULL)
+                    @else
+                        (Available: {{ $spotsLeft }})
+                    @endif
+                </option>
             @endforeach
-        </select><br><br>
+        </select>
+        <br><br>
 
         <button type="submit">Check-In Vehicle</button>
     </form>
