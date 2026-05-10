@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Vehicle;
-use App\Models\Location;
 
 class VehicleController extends Controller
 {
@@ -51,22 +50,47 @@ class VehicleController extends Controller
         // Send them back to the form with a success message
         return redirect()->route('yardstaff.inventory')->with('success', 'Vehicle checked in successfully!');
     }
-    // 3. Show the Inventory List
-    public function index()
-    {
-        // Fetch all vehicles and include their location data to prevent N+1 query issues
-        $vehicles = Vehicle::with('location')->get();
 
-        return view('yardstaff.inventory', compact('vehicles'));
+    // 3. Show the Inventory List
+    public function index(Request $request)
+    {
+        // 1. Start a query builder
+        $query = \App\Models\Vehicle::query();
+
+        // 2. Filter by Search Box (VIN or Model)
+        $query->when($request->search, function ($q) use ($request) {
+            $q->where('vin', 'like', '%' . $request->search . '%')
+              ->orWhere('model', 'like', '%' . $request->search . '%');
+        });
+
+        // 3. Filter by Status Dropdown
+        $query->when($request->status, function ($q) use ($request) {
+            $q->where('status', $request->status);
+        });
+
+        // 4. Filter by Location Dropdown
+        $query->when($request->location_id, function ($q) use ($request) {
+            $q->where('location_id', $request->location_id);
+        });
+
+        // 5. Get the filtered results, newest first
+        $vehicles = $query->latest()->get();
+
+        // 6. We also need all locations so we can populate the filter dropdown!
+        $locations = \App\Models\Location::all();
+
+        return view('yardstaff.inventory', compact('vehicles', 'locations'));
     }
-    // 4. Show the Edit Form
+
+    // 4. SHOW THE EDIT FORM (This was the missing piece!)
     public function edit(Vehicle $vehicle)
     {
-        // Do the exact same thing for the edit page
+        // Get all locations and count how many cars are parked there
         $locations = \App\Models\Location::withCount(['vehicles' => function($query) {
             $query->where('status', '!=', 'Delivered');
         }])->get();
 
+        // Send the specific vehicle and the location list to the edit view
         return view('yardstaff.edit', compact('vehicle', 'locations'));
     }
 
@@ -79,6 +103,7 @@ class VehicleController extends Controller
             'damage_description' => 'nullable|string',
             'damage_severity' => 'nullable|in:Low,Medium,High',
         ]);
+
         // CHECK IF STATUS IS DIFFERENT BEFORE UPDATING
         if ($vehicle->status !== $request->status) {
             \App\Models\VehicleStatusLog::create([
@@ -86,13 +111,13 @@ class VehicleController extends Controller
                 'user_id' => auth()->id(),
                 'status' => $request->status,
             ]);
+        } // <--- FIXED THE MISSING BRACKET HERE!
+
         // UC03: Update the vehicle's location
         $vehicle->update([
             'location_id' => $request->location_id,
             'status' => $request->status,
         ]);
-
-
 
         // UC04: Log Damage if the user typed something in the description box
         if ($request->filled('damage_description')) {
@@ -101,12 +126,11 @@ class VehicleController extends Controller
                 'severity' => $request->damage_severity ?? 'Low',
                 'reported_date' => now(),
                 'vehicle_id' => $vehicle->id,
-                'user_id' => auth()->id(), // Grabs the logged-in Yard Staff's ID
+                'user_id' => auth()->id(),
             ]);
         }
 
-        // Send them back to the inventory list with a success message
-        return redirect()->route('inventory.index')->with('success', 'Vehicle updated successfully!');
+        // FIXED THE ROUTE NAME HERE!
+        return redirect()->route('yardstaff.inventory')->with('success', 'Vehicle updated successfully!');
     }
-}
 }

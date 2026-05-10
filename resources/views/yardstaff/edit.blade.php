@@ -20,13 +20,31 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Update Status</label>
-                        <select name="status" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <select name="status" id="statusDropdown" onchange="toggleDamageForm()" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             <option value="Checked-In" {{ $vehicle->status == 'Checked-In' ? 'selected' : '' }}>Checked-In</option>
-                            <option value="Pending PDI" {{ $vehicle->status == 'Pending PDI' ? 'selected' : '' }}>Pending PDI (Send to Technician)</option>
-                            <option value="Maintenance" {{ $vehicle->status == 'Maintenance' ? 'selected' : '' }}>Maintenance (Major Repairs)</option>
+                            <option value="Pending PDI" {{ $vehicle->status == 'Pending PDI' ? 'selected' : '' }}>Pending PDI</option>
+                            <option value="Damaged" {{ $vehicle->status == 'Damaged' || $vehicle->status == 'Maintenance' ? 'selected' : '' }}>Damaged</option>
                             <option value="Ready for Delivery" {{ $vehicle->status == 'Ready for Delivery' ? 'selected' : '' }}>Ready for Delivery</option>
-                            <option value="Delivered" {{ $vehicle->status == 'Delivered' ? 'selected' : '' }}>Delivered (Leaves Yard)</option>
+                            <option value="Delivered" {{ $vehicle->status == 'Delivered' ? 'selected' : '' }}>Delivered</option>
                         </select>
+                    </div>
+
+                    <div id="damageForm" style="display: {{ ($vehicle->status == 'Damaged' || $vehicle->status == 'Maintenance') ? 'block' : 'none' }};" class="p-4 bg-red-50 border border-red-200 rounded-md">
+                        <h3 class="text-red-800 font-bold mb-4">⚠ File Damage Report</h3>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-red-700">Severity Level</label>
+                            <select name="damage_severity" class="mt-1 block w-full rounded-md border-red-300 shadow-sm focus:border-red-500 focus:ring-red-500">
+                                <option value="Low">Low (Scratches, Dents)</option>
+                                <option value="Medium">Medium (Broken Glass, Parts Missing)</option>
+                                <option value="High">High (Engine/Structural Damage)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-red-700">Damage Description</label>
+                            <textarea name="damage_description" rows="3" placeholder="Describe the damage..." class="mt-1 block w-full rounded-md border-red-300 shadow-sm focus:border-red-500 focus:ring-red-500"></textarea>
+                        </div>
                     </div>
 
                     <div>
@@ -54,6 +72,20 @@
                         </button>
                     </div>
                 </form>
+
+                <script>
+                    function toggleDamageForm() {
+                        var status = document.getElementById('statusDropdown').value;
+                        var damageForm = document.getElementById('damageForm');
+
+                        // If they select "Damaged", show the red box. Otherwise, hide it!
+                        if (status === 'Damaged') {
+                            damageForm.style.display = 'block';
+                        } else {
+                            damageForm.style.display = 'none';
+                        }
+                    }
+                </script>
 
             </div>
         </div>

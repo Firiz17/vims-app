@@ -16,7 +16,7 @@ class SupervisorController extends Controller
         $totalInYard = Vehicle::where('status', '!=', 'Delivered')->count();
 
         $pendingPdiCount = Vehicle::where('status', 'Pending PDI')->count();
-        $maintenanceCount = Vehicle::where('status', 'Maintenance')->count();
+        $maintenanceCount = Vehicle::where('status', 'Damaged')->count();
         $readyCount = Vehicle::where('status', 'Ready for Delivery')->count();
 
         // 2. Fetch the 5 most recent damage reports so the Supervisor sees them instantly

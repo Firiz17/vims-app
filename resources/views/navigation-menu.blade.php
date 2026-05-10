@@ -12,22 +12,32 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-                    <x-nav-link href="{{ route('supervisor.dashboard') }}" :active="request()->routeIs('supervisor.*')">
-                        {{ __('Supervisor Dashboard') }}
-                    </x-nav-link>
 
-                    <x-nav-link href="{{ route('technician.dashboard') }}" :active="request()->routeIs('technician.*')">
-                        {{ __('Technician PDI') }}
-                    </x-nav-link>
+                    @if(auth()->user()->role === 'supervisor')
+                        <x-nav-link href="{{ route('supervisor.dashboard') }}" :active="request()->routeIs('supervisor.dashboard')">
+                            {{ __('Supervisor Dashboard') }}
+                        </x-nav-link>
+                        <x-nav-link href="{{ route('supervisor.locations') }}" :active="request()->routeIs('supervisor.locations*')">
+                            {{ __('Manage Parking') }}
+                        </x-nav-link>
+                    @endif
 
-                    <x-nav-link href="{{ route('yardstaff.inventory') }}" :active="request()->routeIs('yardstaff.*')">
-                        {{ __('Yard Staff') }}
-                    </x-nav-link>
+                    @if(auth()->user()->role === 'technician')
+                        <x-nav-link href="{{ route('technician.dashboard') }}" :active="request()->routeIs('technician.*')">
+                            {{ __('Technician PDI') }}
+                        </x-nav-link>
+                    @endif
+
+                    @if(auth()->user()->role === 'yardstaff')
+                        <x-nav-link href="{{ route('yardstaff.inventory') }}" :active="request()->routeIs('yardstaff.inventory')">
+                            {{ __('Inventory') }}
+                        </x-nav-link>
+                        <x-nav-link href="{{ route('yardstaff.create') }}" :active="request()->routeIs('yardstaff.create')">
+                            {{ __('Check-In Vehicle') }}
+                        </x-nav-link>
+                    @endif
+
                 </div>
-            </div>
 
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <!-- Teams Dropdown -->

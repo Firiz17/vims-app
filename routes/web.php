@@ -16,25 +16,38 @@ Route::middleware([
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
+
+    // --- THE SMART REDIRECT ROUTE (Traffic Cop) ---
     Route::get('/dashboard', function () {
-        return view('dashboard');
+        $role = auth()->user()->role;
+
+        if ($role === 'supervisor') {
+            return redirect()->route('supervisor.dashboard');
+        } elseif ($role === 'technician') {
+            return redirect()->route('technician.dashboard');
+        } else {
+            // Default: Send Yard Staff directly to their inventory
+            return redirect()->route('yardstaff.inventory');
+        }
     })->name('dashboard');
 
-   Route::middleware(['auth', CheckRole::class.':yardstaff'])->prefix('yardstaff')->group(function () {
 
-    // Inventory List
-    Route::get('/inventory', [VehicleController::class, 'index'])->name('yardstaff.inventory');
+    // --- YARD STAFF ROUTES ---
+    Route::middleware(['auth', CheckRole::class.':yardstaff'])->prefix('yardstaff')->group(function () {
+        // Inventory List
+        Route::get('/inventory', [VehicleController::class, 'index'])->name('yardstaff.inventory');
 
-    // Create & Store (Check-In)
-    Route::get('/check-in', [VehicleController::class, 'create'])->name('yardstaff.create');
-    Route::post('/check-in', [VehicleController::class, 'store'])->name('yardstaff.store');
+        // Create & Store (Check-In)
+        Route::get('/check-in', [VehicleController::class, 'create'])->name('yardstaff.create');
+        Route::post('/check-in', [VehicleController::class, 'store'])->name('yardstaff.store');
 
-    // Edit & Update (Move/Update Status)
-    Route::get('/vehicle/{vehicle}/edit', [VehicleController::class, 'edit'])->name('yardstaff.edit');
-    Route::put('/vehicle/{vehicle}', [VehicleController::class, 'update'])->name('yardstaff.update');
+        // Edit & Update (Move/Update Status)
+        Route::get('/vehicle/{vehicle}/edit', [VehicleController::class, 'edit'])->name('yardstaff.edit');
+        Route::put('/vehicle/{vehicle}', [VehicleController::class, 'update'])->name('yardstaff.update');
+    });
 
-});
-// --- TECHNICIAN ROUTES ---
+
+    // --- TECHNICIAN ROUTES ---
     Route::middleware(['auth', CheckRole::class.':technician'])->prefix('technician')->group(function () {
         // View vehicles that need inspection
         Route::get('/dashboard', [TechnicianController::class, 'index'])->name('technician.dashboard');
@@ -45,6 +58,8 @@ Route::middleware([
         // Save the PDI form to the database
         Route::post('/vehicle/{vehicle}/pdi', [TechnicianController::class, 'storePdi'])->name('technician.pdi.store');
     });
+
+
     // --- SUPERVISOR ROUTES ---
     Route::middleware(['auth', CheckRole::class.':supervisor'])->prefix('supervisor')->group(function () {
         // Master Overview Dashboard
@@ -54,6 +69,7 @@ Route::middleware([
         Route::get('/locations/{location}/edit', [SupervisorController::class, 'editLocation'])->name('supervisor.locations.edit');
         Route::put('/locations/{location}', [SupervisorController::class, 'updateLocation'])->name('supervisor.locations.update');
     });
+
 });
 
 
