@@ -1,91 +1,61 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>VIMS - Edit Vehicle</title>
-</head>
-<body>
-    <h1>Update Vehicle: {{ $vehicle->vin }}</h1>
-    <h3>{{ $vehicle->principal }} {{ $vehicle->model }}</h3>
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            Update Vehicle: {{ $vehicle->vin }}
+        </h2>
+    </x-slot>
 
-    @if ($errors->any())
-        <ul style="color: red;">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    @endif
+    <div class="py-12">
+        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-8">
 
-    <form action="{{ route('vehicle.update', $vehicle->id) }}" method="POST">
-        @csrf
-        @method('PUT') <h3>1. Update Location (UC03)</h3>
-        <label>Vehicle Status:</label><br>
-        <select name="status" required>
-            <option value="Checked-In" {{ $vehicle->status == 'Checked-In' ? 'selected' : '' }}>Checked-In</option>
-            <option value="Pending PDI" {{ $vehicle->status == 'Pending PDI' ? 'selected' : '' }}>Pending PDI</option>
-            {{-- <option value="Maintenance" {{ $vehicle->status == 'Maintenance' ? 'selected' : '' }}>Maintenance</option> --}}
-            <option value="Ready for Delivery" {{ $vehicle->status == 'Ready for Delivery' ? 'selected' : '' }}>Ready for Delivery</option>
-            <option value="Delivered" {{ $vehicle->status == 'Delivered' ? 'selected' : '' }}>Delivered</option>
-        </select>
-        <br><br>
-        
-        <label>Update Location:</label><br>
-        <select name="location_id" required>
-            @foreach($locations as $location)
-                @php
-                    $spotsLeft = $location->allowed_capacity - $location->vehicles_count;
-                    $isCurrentLocation = $vehicle->location_id == $location->id;
-                @endphp
+                <form action="{{ route('yardstaff.update', $vehicle->id) }}" method="POST" class="space-y-6">
+                    @csrf
+                    @method('PUT')
 
-                <option value="{{ $location->id }}"
-                    {{ ($spotsLeft <= 0 && !$isCurrentLocation) ? 'disabled' : '' }}
-                    {{ $isCurrentLocation ? 'selected' : '' }}>
+                    <div class="bg-gray-50 p-4 rounded-md mb-6">
+                        <p><strong>Model:</strong> {{ $vehicle->principal }} {{ $vehicle->model }}</p>
+                        <p><strong>Current Status:</strong> {{ $vehicle->status }}</p>
+                    </div>
 
-                    {{ $location->name }}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Update Status</label>
+                        <select name="status" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <option value="Checked-In" {{ $vehicle->status == 'Checked-In' ? 'selected' : '' }}>Checked-In</option>
+                            <option value="Pending PDI" {{ $vehicle->status == 'Pending PDI' ? 'selected' : '' }}>Pending PDI (Send to Technician)</option>
+                            <option value="Maintenance" {{ $vehicle->status == 'Maintenance' ? 'selected' : '' }}>Maintenance (Major Repairs)</option>
+                            <option value="Ready for Delivery" {{ $vehicle->status == 'Ready for Delivery' ? 'selected' : '' }}>Ready for Delivery</option>
+                            <option value="Delivered" {{ $vehicle->status == 'Delivered' ? 'selected' : '' }}>Delivered (Leaves Yard)</option>
+                        </select>
+                    </div>
 
-                    @if($isCurrentLocation)
-                        (Current Location)
-                    @elseif($spotsLeft <= 0)
-                        (FULL)
-                    @else
-                        (Available: {{ $spotsLeft }})
-                    @endif
-                </option>
-            @endforeach
-        </select>
-        <br><br>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Move Parking Location</label>
+                        <select name="location_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            @foreach($locations as $location)
+                                @php
+                                    $spotsLeft = $location->allowed_capacity - $location->vehicles_count;
+                                    $isCurrentLocation = $vehicle->location_id == $location->id;
+                                @endphp
+                                <option value="{{ $location->id }}" {{ ($spotsLeft <= 0 && !$isCurrentLocation) ? 'disabled' : '' }} {{ $isCurrentLocation ? 'selected' : '' }}>
+                                    {{ $location->name }}
+                                    @if($isCurrentLocation) (Current Location) @elseif($spotsLeft <= 0) (FULL) @else (Available: {{ $spotsLeft }}) @endif
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
 
-        <hr>
-        <h3>Vehicle Damage History</h3>
-        @if($vehicle->damageReports->count() > 0)
-            <ul style="color: darkred;">
-                @foreach($vehicle->damageReports as $report)
-                    <li>
-                        <strong>{{ $report->reported_date }} ({{ $report->severity }} Severity):</strong>
-                        {{ $report->description }}
-                    </li>
-                @endforeach
-            </ul>
-        @else
-            <p style="color: green;">No previous damage reported.</p>
-        @endif
-        <hr>
+                    <div class="flex justify-end space-x-4">
+                        <a href="{{ route('yardstaff.inventory') }}" class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            Cancel
+                        </a>
+                        <button type="submit" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                            Save Updates
+                        </button>
+                    </div>
+                </form>
 
-        <h3>2. Log New Damage (UC04)</h3>
-        <p><i>Leave blank if there is no new damage to report.</i></p>
-
-        <label>Damage Description:</label><br>
-        <textarea name="damage_description" rows="3" cols="40"></textarea><br><br>
-
-        <label>Severity:</label><br>
-        <select name="damage_severity">
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
-        </select>
-        <br><br>
-
-        <button type="submit">Save Updates</button>
-        <a href="{{ route('inventory.index') }}">Cancel</a>
-    </form>
-</body>
-</html>
+            </div>
+        </div>
+    </div>
+</x-app-layout>

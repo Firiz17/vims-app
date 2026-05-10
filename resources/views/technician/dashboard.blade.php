@@ -1,9 +1,17 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>VIMS - Technician Dashboard</title>
-</head>
-<body>
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ __('Technician Dashboard') }}
+        </h2>
+    </x-slot>
+
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
+
+                </div>
+        </div>
+    </div>
     <h1>Technician Dashboard</h1>
     <h2>Vehicles Pending PDI</h2>
 
@@ -37,5 +45,4 @@
             @endforelse
         </tbody>
     </table>
-</body>
-</html>
+</x-app-layout>

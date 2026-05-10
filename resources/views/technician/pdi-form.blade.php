@@ -1,9 +1,17 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>VIMS - Perform PDI</title>
-</head>
-<body>
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ __('Technician PDI') }}
+        </h2>
+    </x-slot>
+
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
+
+                </div>
+        </div>
+    </div>
     <h1>Pre-Delivery Inspection (PDI)</h1>
     <h3>Vehicle: {{ $vehicle->principal }} {{ $vehicle->model }} ({{ $vehicle->vin }})</h3>
 
@@ -84,5 +92,4 @@
         <button type="submit" style="padding: 10px 20px;">Submit Inspection</button>
         <a href="{{ route('technician.dashboard') }}">Cancel</a>
     </form>
-</body>
-</html>
+</x-app-layout>

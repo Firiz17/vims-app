@@ -49,7 +49,7 @@ class VehicleController extends Controller
         ]);
 
         // Send them back to the form with a success message
-        return back()->with('success', 'Vehicle checked in successfully!');
+        return redirect()->route('yardstaff.inventory')->with('success', 'Vehicle checked in successfully!');
     }
     // 3. Show the Inventory List
     public function index()

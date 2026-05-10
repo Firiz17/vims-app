@@ -1,9 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Middleware\CheckRole;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\TechnicianController;
 use App\Http\Controllers\SupervisorController;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -18,19 +20,22 @@ Route::middleware([
         return view('dashboard');
     })->name('dashboard');
 
-    Route::prefix('yardstaff')->group(function () {
+   Route::middleware(['auth', CheckRole::class.':yardstaff'])->prefix('yardstaff')->group(function () {
+
     // Inventory List
-    Route::get('/inventory', [VehicleController::class, 'index'])->name('inventory.index');
+    Route::get('/inventory', [VehicleController::class, 'index'])->name('yardstaff.inventory');
 
-    Route::get('/check-in', [VehicleController::class, 'create']);
-    Route::post('/check-in', [VehicleController::class, 'store'])->name('vehicle.store');
+    // Create & Store (Check-In)
+    Route::get('/check-in', [VehicleController::class, 'create'])->name('yardstaff.create');
+    Route::post('/check-in', [VehicleController::class, 'store'])->name('yardstaff.store');
 
-    // --- NEW EDIT ROUTES ---
-        Route::get('/vehicle/{vehicle}/edit', [VehicleController::class, 'edit'])->name('vehicle.edit');
-        Route::put('/vehicle/{vehicle}', [VehicleController::class, 'update'])->name('vehicle.update');
+    // Edit & Update (Move/Update Status)
+    Route::get('/vehicle/{vehicle}/edit', [VehicleController::class, 'edit'])->name('yardstaff.edit');
+    Route::put('/vehicle/{vehicle}', [VehicleController::class, 'update'])->name('yardstaff.update');
+
 });
 // --- TECHNICIAN ROUTES ---
-    Route::prefix('technician')->group(function () {
+    Route::middleware(['auth', CheckRole::class.':technician'])->prefix('technician')->group(function () {
         // View vehicles that need inspection
         Route::get('/dashboard', [TechnicianController::class, 'index'])->name('technician.dashboard');
 
@@ -41,7 +46,7 @@ Route::middleware([
         Route::post('/vehicle/{vehicle}/pdi', [TechnicianController::class, 'storePdi'])->name('technician.pdi.store');
     });
     // --- SUPERVISOR ROUTES ---
-    Route::prefix('supervisor')->group(function () {
+    Route::middleware(['auth', CheckRole::class.':supervisor'])->prefix('supervisor')->group(function () {
         // Master Overview Dashboard
         Route::get('/dashboard', [SupervisorController::class, 'index'])->name('supervisor.dashboard');
         Route::get('/locations', [SupervisorController::class, 'manageLocations'])->name('supervisor.locations');
