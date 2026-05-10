@@ -17,11 +17,32 @@
         <!-- Styles -->
         @livewireStyles
     </head>
-    <body class="font-sans antialiased">
-        <x-banner />
+   <body class="font-sans antialiased">
+    <x-banner />
 
-        <div class="min-h-screen bg-gray-100">
-            @livewire('navigation-menu')
+    @php
+        $themeBg = 'bg-gray-100'; // Default gray background
+        $bannerColor = 'bg-gray-800'; // Default dark banner
+
+        if (auth()->check()) {
+            if (auth()->user()->role == 'yardstaff') {
+                $themeBg = 'bg-green-50';
+                $bannerColor = 'bg-green-600';
+            } elseif (auth()->user()->role == 'supervisor') {
+                $themeBg = 'bg-blue-50';
+                $bannerColor = 'bg-blue-600';
+            } elseif (auth()->user()->role == 'technician') {
+                $themeBg = 'bg-purple-50';
+                $bannerColor = 'bg-purple-600';
+            }
+        }
+    @endphp
+
+    <div class="h-2 w-full {{ $bannerColor }}"></div>
+
+    <div class="min-h-screen {{ $themeBg }}">
+
+        @livewire('navigation-menu')
 
             <!-- Page Heading -->
             @if (isset($header))

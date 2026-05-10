@@ -29,6 +29,16 @@
                 <x-input id="password_confirmation" class="block mt-1 w-full" type="password" name="password_confirmation" required autocomplete="new-password" />
             </div>
 
+            <div class="mt-4">
+                <x-label for="role" value="{{ __('Job Role') }}" />
+                <select id="role" name="role" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
+                    <option value="" disabled selected>-- Select Your Role --</option>
+                    <option value="yardstaff">Yard Staff</option>
+                    <option value="technician">Technician</option>
+                    <option value="supervisor">Supervisor</option>
+                </select>
+            </div>
+
             @if (Laravel\Jetstream\Jetstream::hasTermsAndPrivacyPolicyFeature())
                 <div class="mt-4">
                     <x-label for="terms">

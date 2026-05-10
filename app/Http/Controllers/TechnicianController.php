@@ -24,57 +24,36 @@ class TechnicianController extends Controller
     }
 
     // 3. Save the PDI Inspection
-    public function storePdi(Request $request, Vehicle $vehicle)
+    public function storePdi(Request $request, \App\Models\Vehicle $vehicle)
     {
-        // 1. Your new validation rules
-        $request->validate([
-            'tyre' => 'required|in:Checked,Not Checked',
-            'oil_level' => 'required|in:Checked,Not Checked',
-            'coolant' => 'required|in:Checked,Not Checked',
-            'interior_cleanliness' => 'required|in:Checked,Not Checked',
-            'tinted_window' => 'required|in:Applied,Not Applied',
-            'dashcam' => 'required|in:Applied,Not Applied',
+        // 1. THE LOGIC ENGINE: Check if all 4 mandatory items are checked
+        $passedMandatory = $request->has('oil_level') &&
+                           $request->has('coolant') &&
+                           $request->has('interior') &&
+                           $request->has('tyre');
+
+        // 2. Determine the automatic status
+        if ($passedMandatory) {
+            $newStatus = 'Ready for Delivery';
+            $message = 'PDI Passed! Vehicle is now Ready for Delivery.';
+        } else {
+            $newStatus = 'Pending PDI';
+            $message = 'PDI Incomplete. Vehicle remains in Pending status until all mandatory checks are complete.';
+        }
+
+        // 3. Update the vehicle in the database
+        $vehicle->update([
+            'status' => $newStatus,
         ]);
 
-        // 2. AUTOMATICALLY CALCULATE THE RESULT
-        // If ANY item is left unchecked or unapplied, it is not ready for delivery.
-        $hasUncheckedItems = (
-            $request->tyre === 'Not Checked' ||
-            $request->oil_level === 'Not Checked' ||
-            $request->coolant === 'Not Checked' ||
-            $request->interior_cleanliness === 'Not Checked' ||
-            $request->tinted_window === 'Not Applied' ||
-            $request->dashcam === 'Not Applied'
-        );
-
-        // Set variables based on the new calculation
-        $calculatedResult = $hasUncheckedItems ? 'Fail' : 'Pass';
-        $newStatus = $hasUncheckedItems ? 'Pending PDI' : 'Ready for Delivery';
-
-        // 3. Save the inspection to the database
-        PdiInspection::create([
-            'tyre' => $request->tyre === 'Checked' ? 1 : 0,
-            'oil_level' => $request->oil_level === 'Checked' ? 1 : 0,
-            'coolant' => $request->coolant === 'Checked' ? 1 : 0,
-            'interior_cleanliness' => $request->interior_cleanliness === 'Checked' ? 1 : 0,
-            'tinted_window' => $request->tinted_window === 'Applied' ? 1 : 0,
-            'dashcam' => $request->dashcam === 'Applied' ? 1 : 0,
-            'inspection_date' => now(),
-            'result' => $calculatedResult,
-            'vehicle_id' => $vehicle->id,
-            'user_id' => auth()->id(),
-        ]);
-
-        // 4. Log the status change
-        VehicleStatusLog::create([
+        // 4. Log the status change so the Supervisor can track it
+        \App\Models\VehicleStatusLog::create([
             'vehicle_id' => $vehicle->id,
             'user_id' => auth()->id(),
             'status' => $newStatus,
         ]);
 
-        // 5. Update the vehicle record
-        $vehicle->update(['status' => $newStatus]);
-
-        return redirect()->route('technician.dashboard')->with('success', 'PDI Checklist submitted! Status automatically updated to: ' . $newStatus);
+        // 5. Send the technician back to their dashboard with the dynamic message
+        return redirect()->route('technician.dashboard')->with('success', $message);
     }
 }
