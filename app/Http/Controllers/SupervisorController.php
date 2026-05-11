@@ -5,28 +5,48 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Vehicle;
 use App\Models\DamageReport;
+
 // use App\Models\User; // We would use this if filtering by staff, but let's keep it simple for now!
 
 class SupervisorController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // 1. AT-A-GLANCE STATS
+        // 1. AT-A-GLANCE STATS (Leave these exactly as they are)
         $totalVehicles = \App\Models\Vehicle::where('status', '!=', 'Delivered')->count();
         $readyCount = \App\Models\Vehicle::where('status', 'Ready for Delivery')->count();
         $pendingPdiCount = \App\Models\Vehicle::where('status', 'Pending PDI')->count();
         $damagedCount = \App\Models\Vehicle::where('status', 'Damaged')->count();
 
-        // 2. RECENT DAMAGE REPORTS (Get the latest 5, including who reported it and which car)
-        $damageReports = \App\Models\DamageReport::with(['vehicle', 'user'])
-                            ->latest('reported_date')
-                            ->take(5)
-                            ->get();
+        // 2. THE DYNAMIC DAMAGE FEED
+        // Start the query builder (but don't get the data yet!)
+        $query = \App\Models\DamageReport::with(['vehicle', 'user'])->latest('reported_date');
 
-        // 3. PARKING CAPACITY (To see which zones are getting full)
+        // Apply Severity Filter if selected
+        if ($request->filled('severity')) {
+            $query->where('severity', $request->severity);
+        }
+
+        // Apply Role Filter if selected (Looks at the User table!)
+        if ($request->filled('role')) {
+            $query->whereHas('user', function($q) use ($request) {
+                $q->where('role', $request->role);
+            });
+        }
+
+        // Now execute the query to get all the filtered results
+        $damageReports = $query->get();
+
+        // 3. PARKING CAPACITY (Leave this exactly as it is)
         $locations = \App\Models\Location::withCount(['vehicles' => function($query) {
             $query->where('status', '!=', 'Delivered');
         }])->get();
+
+        $agingVehicles = \App\Models\Vehicle::with('location')
+            ->where('status', '!=', 'Delivered')
+            ->orderBy('created_at', 'asc') // Ascending means oldest dates (longest days) are first
+            ->take(10) // Only show the top 10 oldest offenders to keep the UI clean
+            ->get();
 
         return view('supervisor.dashboard', compact(
             'totalVehicles',
@@ -34,7 +54,8 @@ class SupervisorController extends Controller
             'pendingPdiCount',
             'damagedCount',
             'damageReports',
-            'locations'
+            'locations',
+            'agingVehicles'
         ));
     }
     public function manageLocations()

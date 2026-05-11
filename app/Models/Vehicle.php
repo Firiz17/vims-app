@@ -30,4 +30,15 @@ class Vehicle extends Model
     {
         return $this->hasMany(PdiInspection::class);
     }
+    public function getDaysInYardAttribute()
+    {
+        // Safety check: if there is no creation date, return 0
+        if (!$this->created_at) {
+            return 0;
+        }
+
+        // 1. startOfDay() resets the clock to 00:00:00 so it counts strict calendar days
+        // 2. (int) forces the final result to be a clean whole number, killing all decimals
+        return (int) $this->created_at->startOfDay()->diffInDays(now()->startOfDay());
+    }
 }
