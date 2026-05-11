@@ -68,6 +68,7 @@ Route::middleware([
         Route::post('/locations', [SupervisorController::class, 'storeLocation'])->name('supervisor.locations.store');
         Route::get('/locations/{location}/edit', [SupervisorController::class, 'editLocation'])->name('supervisor.locations.edit');
         Route::put('/locations/{location}', [SupervisorController::class, 'updateLocation'])->name('supervisor.locations.update');
+        Route::resource('locations', \App\Http\Controllers\LocationController::class);
     });
 
 });

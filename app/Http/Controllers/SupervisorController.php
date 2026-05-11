@@ -11,29 +11,30 @@ class SupervisorController extends Controller
 {
     public function index()
     {
-        // 1. Calculate the big numbers for the top of the dashboard
-        // We exclude 'Delivered' because they are no longer in the yard
-        $totalInYard = Vehicle::where('status', '!=', 'Delivered')->count();
+        // 1. AT-A-GLANCE STATS
+        $totalVehicles = \App\Models\Vehicle::where('status', '!=', 'Delivered')->count();
+        $readyCount = \App\Models\Vehicle::where('status', 'Ready for Delivery')->count();
+        $pendingPdiCount = \App\Models\Vehicle::where('status', 'Pending PDI')->count();
+        $damagedCount = \App\Models\Vehicle::where('status', 'Damaged')->count();
 
-        $pendingPdiCount = Vehicle::where('status', 'Pending PDI')->count();
-        $maintenanceCount = Vehicle::where('status', 'Damaged')->count();
-        $readyCount = Vehicle::where('status', 'Ready for Delivery')->count();
+        // 2. RECENT DAMAGE REPORTS (Get the latest 5, including who reported it and which car)
+        $damageReports = \App\Models\DamageReport::with(['vehicle', 'user'])
+                            ->latest('reported_date')
+                            ->take(5)
+                            ->get();
 
-        // 2. Fetch the 5 most recent damage reports so the Supervisor sees them instantly
-        // Using 'with' pulls in the connected vehicle data so we don't get N+1 query errors
-        $recentDamages = DamageReport::with('vehicle')->latest('reported_date')->take(5)->get();
+        // 3. PARKING CAPACITY (To see which zones are getting full)
+        $locations = \App\Models\Location::withCount(['vehicles' => function($query) {
+            $query->where('status', '!=', 'Delivered');
+        }])->get();
 
-        // 3. Fetch the master list of ALL vehicles
-        $allVehicles = Vehicle::with('location')->latest()->get();
-
-        // Pass all this data to the view
         return view('supervisor.dashboard', compact(
-            'totalInYard',
-            'pendingPdiCount',
-            'maintenanceCount',
+            'totalVehicles',
             'readyCount',
-            'recentDamages',
-            'allVehicles'
+            'pendingPdiCount',
+            'damagedCount',
+            'damageReports',
+            'locations'
         ));
     }
     public function manageLocations()

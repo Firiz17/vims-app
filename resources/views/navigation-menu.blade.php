@@ -17,7 +17,7 @@
                         <x-nav-link href="{{ route('supervisor.dashboard') }}" :active="request()->routeIs('supervisor.dashboard')">
                             {{ __('Supervisor Dashboard') }}
                         </x-nav-link>
-                        <x-nav-link href="{{ route('supervisor.locations') }}" :active="request()->routeIs('supervisor.locations*')">
+                        <x-nav-link href="{{ route('locations.index') }}" :active="request()->routeIs('locations.*')">
                             {{ __('Manage Parking') }}
                         </x-nav-link>
                     @endif

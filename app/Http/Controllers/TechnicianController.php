@@ -53,6 +53,16 @@ class TechnicianController extends Controller
             'status' => $newStatus,
         ]);
 
+        if ($request->filled('notes')) {
+            \App\Models\DamageReport::create([
+                'description' => 'PDI Failure Note: ' . $request->notes, // Tag it so the boss knows it came from a PDI
+                'severity' => 'Medium', // Defaulting to Medium since it failed a technical inspection
+                'reported_date' => now(),
+                'vehicle_id' => $vehicle->id,
+                'user_id' => auth()->id(),
+            ]);
+        }
+
         // 5. Send the technician back to their dashboard with the dynamic message
         return redirect()->route('technician.dashboard')->with('success', $message);
     }

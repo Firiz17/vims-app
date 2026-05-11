@@ -1,42 +1,45 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Edit parking') }}
+            {{ __('Edit Parking Zone: ') }} {{ $location->name }}
         </h2>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
+        <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-8 border-t-4 border-blue-600">
 
-                </div>
+                <form action="{{ route('locations.update', $location->id) }}" method="POST" class="space-y-6">
+                    @csrf
+                    @method('PUT')
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700">Parking Zone Name</label>
+                        <input type="text" name="name" value="{{ $location->name }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+
+                    <div class="bg-blue-50 p-4 rounded-md border border-blue-100">
+                        <label class="block text-sm font-bold text-blue-900 mb-1">Zone Capacity (Max 20)</label>
+                        <p class="text-xs text-blue-700 mb-3">Note: You cannot lower the capacity below the number of vehicles currently parked here.</p>
+
+                        <input type="number" name="capacity" value="{{ $location->allowed_capacity }}" min="1" max="20" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+
+                        @error('capacity')
+                            <p class="text-red-500 text-sm font-bold mt-2">⚠️ {{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="flex justify-end space-x-4 pt-4 border-t">
+                        <a href="{{ route('locations.index') }}" class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            Cancel and Go Back
+                        </a>
+                        <button type="submit" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+
+            </div>
         </div>
-    </div>
-    <h1>Edit Parking Zone: {{ $location->name }}</h1>
-    <a href="{{ route('supervisor.locations') }}">← Cancel and Go Back</a>
-    <br><br>
-
-    @if ($errors->any())
-        <ul style="color: red;">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    @endif
-
-    <div style="border: 2px solid black; padding: 20px; width: 50%;">
-        <form action="{{ route('supervisor.locations.update', $location->id) }}" method="POST">
-            @csrf
-            @method('PUT') <label>Zone Name:</label><br>
-            <input type="text" name="name" value="{{ $location->name }}" required><br><br>
-
-            <label>Total Physical Capacity:</label><br>
-            <input type="number" name="total_capacity" value="{{ $location->total_capacity }}" min="1" required><br><br>
-
-            <label>Allowed Parking Limit (Operational):</label><br>
-            <input type="number" name="allowed_capacity" value="{{ $location->allowed_capacity }}" min="1" required><br><br>
-
-            <button type="submit" style="padding: 10px 20px; background-color: blue; color: white;">Save Changes</button>
-        </form>
     </div>
 </x-app-layout>
