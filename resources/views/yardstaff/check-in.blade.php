@@ -36,10 +36,21 @@
                         <select name="location_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             <option value="" disabled selected>-- Select a Zone --</option>
                             @foreach($locations as $location)
-                                @php $spotsLeft = $location->allowed_capacity - $location->vehicles_count; @endphp
-                                <option value="{{ $location->id }}" {{ $spotsLeft <= 0 ? 'disabled' : '' }}>
-                                    {{ $location->name }} @if($spotsLeft <= 0) (FULL) @else (Available: {{ $spotsLeft }}) @endif
-                                </option>
+                                @php
+                                    // Calculate how many spots are left
+                                    $parked = $location->vehicles_count ?? 0;
+                                    $remaining = $location->allowed_capacity - $parked;
+                                @endphp
+
+                                @if($remaining <= 0)
+                                    <option value="{{ $location->id }}" disabled class="text-red-500 font-bold">
+                                        ❌ {{ $location->name }} (FULL)
+                                    </option>
+                                @else
+                                    <option value="{{ $location->id }}" class="text-gray-900">
+                                        📍 {{ $location->name }} ({{ $remaining }} spots remaining)
+                                    </option>
+                                @endif
                             @endforeach
                         </select>
                     </div>

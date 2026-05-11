@@ -52,13 +52,22 @@
                         <select name="location_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             @foreach($locations as $location)
                                 @php
-                                    $spotsLeft = $location->allowed_capacity - $location->vehicles_count;
-                                    $isCurrentLocation = $vehicle->location_id == $location->id;
+                                    $parked = $location->vehicles_count ?? 0;
+                                    $remaining = $location->allowed_capacity - $parked;
+
+                                    // Identify if this is where the car is ALREADY parked
+                                    $isCurrentLocation = ($vehicle->location_id == $location->id);
                                 @endphp
-                                <option value="{{ $location->id }}" {{ ($spotsLeft <= 0 && !$isCurrentLocation) ? 'disabled' : '' }} {{ $isCurrentLocation ? 'selected' : '' }}>
-                                    {{ $location->name }}
-                                    @if($isCurrentLocation) (Current Location) @elseif($spotsLeft <= 0) (FULL) @else (Available: {{ $spotsLeft }}) @endif
-                                </option>
+
+                                @if($remaining <= 0 && !$isCurrentLocation)
+                                    <option value="{{ $location->id }}" disabled class="text-red-500 font-bold">
+                                        ❌ {{ $location->name }} (FULL)
+                                    </option>
+                                @else
+                                    <option value="{{ $location->id }}" {{ $isCurrentLocation ? 'selected' : '' }} class="text-gray-900">
+                                        📍 {{ $location->name }} ({{ $remaining }} spots remaining)
+                                    </option>
+                                @endif
                             @endforeach
                         </select>
                     </div>

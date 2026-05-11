@@ -10,7 +10,7 @@ class VehicleController extends Controller
     // 1. Show the Check-In Form
     public function create()
     {
-        // Fetch locations and count parked vehicles (ignoring delivered ones)
+        // Fetch all locations AND count how many cars are currently parked in them
         $locations = \App\Models\Location::withCount(['vehicles' => function($query) {
             $query->where('status', '!=', 'Delivered');
         }])->get();
@@ -83,14 +83,14 @@ class VehicleController extends Controller
     }
 
     // 4. SHOW THE EDIT FORM (This was the missing piece!)
-    public function edit(Vehicle $vehicle)
+    public function edit(\App\Models\Vehicle $vehicle)
     {
-        // Get all locations and count how many cars are parked there
+        // Fetch locations and count parked cars
         $locations = \App\Models\Location::withCount(['vehicles' => function($query) {
             $query->where('status', '!=', 'Delivered');
         }])->get();
 
-        // Send the specific vehicle and the location list to the edit view
+        // Pass BOTH the specific vehicle and the locations to the view
         return view('yardstaff.edit', compact('vehicle', 'locations'));
     }
 
